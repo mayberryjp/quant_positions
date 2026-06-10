@@ -12,9 +12,18 @@ if config.config_file_name is not None:
 target_metadata = None
 
 
+VERSION_TABLE = "quant_positions_alembic_version"
+
+
 def run_migrations_offline() -> None:
     url = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        version_table=VERSION_TABLE,
+        version_table_schema="position_tracking",
+    )
     with context.begin_transaction():
         context.run_migrations()
 
@@ -23,7 +32,12 @@ def run_migrations_online() -> None:
     url = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
     connectable = create_engine(url, pool_pre_ping=True)
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table=VERSION_TABLE,
+            version_table_schema="position_tracking",
+        )
         with context.begin_transaction():
             context.run_migrations()
 
