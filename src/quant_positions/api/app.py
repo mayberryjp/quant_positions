@@ -197,7 +197,7 @@ def create_app(
             body = request.json
         except Exception:
             return _validation_error_response("invalid JSON body")
-        if not body or not isinstance(body, dict):
+        if body is None or not isinstance(body, dict):
             return _validation_error_response("request body required")
 
         name = body.get("name")
@@ -311,7 +311,7 @@ def create_app(
             body = request.json
         except Exception:
             return _validation_error_response("invalid JSON body")
-        if not body or not isinstance(body, dict):
+        if body is None or not isinstance(body, dict):
             return _validation_error_response("request body required")
 
         # Validate required fields
