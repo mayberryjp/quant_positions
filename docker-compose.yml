@@ -1,12 +1,12 @@
 services:
   quant_positions:
-    image: quant_positions:latest
+    image: mayberry4477/quant_positions:latest
     container_name: quant_positions
     stdin_open: true
     tty: true
     environment:
       - DATABASE_URL=postgresql+psycopg://quant:quant_dev_password@postgres:5432/quant
-      - API_PORT=8001
+      - API_PORT=8015
       - RECONCILIATION_INTERVAL=300
     ports:
-      - "8001:8001"
+      - "8015:8015"
