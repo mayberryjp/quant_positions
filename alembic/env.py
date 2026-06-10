@@ -22,7 +22,6 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         version_table=VERSION_TABLE,
-        version_table_schema="position_tracking",
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -36,7 +35,6 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             version_table=VERSION_TABLE,
-            version_table_schema="position_tracking",
         )
         with context.begin_transaction():
             context.run_migrations()
