@@ -115,3 +115,44 @@ def test_create_portfolio_valid_types():
         assert resp.status_code == 201
 
     assert len(created) == 3
+
+
+def test_delete_portfolio_success():
+    def fake_delete(portfolio_id: int):
+        assert portfolio_id == 1
+        return SAMPLE_PORTFOLIO
+
+    client = TestClient(create_app(portfolio_delete=fake_delete))
+    resp = client.delete("/portfolios/1")
+    assert resp.status_code == 200
+    assert resp.json()["name"] == "paper-main"
+
+
+def test_delete_portfolio_not_found():
+    def fake_delete(portfolio_id: int):
+        return None
+
+    client = TestClient(create_app(portfolio_delete=fake_delete))
+    resp = client.delete("/portfolios/999")
+    assert resp.status_code == 404
+
+
+def test_delete_portfolio_invalid_id():
+    def fail_if_called(portfolio_id):
+        raise AssertionError("should not be called")
+
+    client = TestClient(create_app(portfolio_delete=fail_if_called))
+    resp = client.delete("/portfolios/abc")
+    assert resp.status_code == 422
+
+
+def test_delete_portfolio_in_use():
+    from quant_positions.repository.portfolios import PortfolioInUseError
+
+    def fake_delete(portfolio_id: int):
+        raise PortfolioInUseError("portfolio has positions")
+
+    client = TestClient(create_app(portfolio_delete=fake_delete))
+    resp = client.delete("/portfolios/1")
+    assert resp.status_code == 409
+    assert "has positions" in resp.json()["error"]

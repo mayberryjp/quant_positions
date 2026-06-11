@@ -34,6 +34,10 @@ class WSGIClient:
         resp = self._app.post_json(url, json or {}, expect_errors=True)
         return _Response(resp)
 
+    def delete(self, url: str):
+        resp = self._app.delete(url, expect_errors=True)
+        return _Response(resp)
+
 
 # Alias used by all test files.
 TestClient = WSGIClient

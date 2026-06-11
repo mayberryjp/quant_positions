@@ -31,6 +31,7 @@ log = logging.getLogger(SERVICE_NAME)
 ReadinessCheck = Callable[[], Union[ReadinessStatus, Dict[str, Any]]]
 PortfolioList = Callable[[Any], Dict[str, Any]]
 PortfolioCreate = Callable[[Any], Dict[str, Any]]
+PortfolioDelete = Callable[[int], Optional[Dict[str, Any]]]
 PositionList = Callable[[Any], Dict[str, Any]]
 PositionDetail = Callable[[int], Optional[Dict[str, Any]]]
 PositionByTicker = Callable[[Any], Optional[Dict[str, Any]]]
@@ -118,6 +119,7 @@ def create_app(
     readiness_check: ReadinessCheck = check_database_readiness,
     portfolio_list: PortfolioList | None = None,
     portfolio_create: PortfolioCreate | None = None,
+    portfolio_delete: PortfolioDelete | None = None,
     position_list: PositionList | None = None,
     position_detail: PositionDetail | None = None,
     position_by_ticker: PositionByTicker | None = None,
@@ -232,6 +234,25 @@ def create_app(
                 response.status = 409
                 return {"status": "conflict", "error": f"portfolio '{name}' already exists"}
             return _server_error(exc)
+
+    @api.delete("/portfolios/<portfolio_id>")
+    def delete_portfolio_route(portfolio_id: str) -> dict:
+        if portfolio_delete is None:
+            return _server_error(RuntimeError("portfolio_delete not configured"))
+        try:
+            pid = int(portfolio_id)
+        except (ValueError, TypeError):
+            return _validation_error_response("portfolio_id must be an integer")
+        try:
+            result = portfolio_delete(pid)
+        except Exception as exc:
+            if "in use" in str(exc).lower() or "has positions" in str(exc).lower():
+                response.status = 409
+                return {"status": "conflict", "error": str(exc)}
+            return _server_error(exc)
+        if result is None:
+            return _not_found("portfolio not found")
+        return result
 
     # -- positions (Slice 2) --
 

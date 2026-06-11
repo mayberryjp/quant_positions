@@ -110,6 +110,48 @@ def get_portfolio_by_name(name: str) -> dict[str, Any] | None:
     return _row_to_portfolio(row)
 
 
+class PortfolioInUseError(Exception):
+    """Raised when a portfolio cannot be deleted because it has related records."""
+
+
+def delete_portfolio(portfolio_id: int) -> dict[str, Any] | None:
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured")
+
+    engine = create_engine(database_url, pool_pre_ping=True)
+    try:
+        with engine.begin() as conn:
+            row = conn.execute(
+                text("""
+                    SELECT id, name, portfolio_type, currency, enabled,
+                           metadata, created_at, updated_at
+                    FROM position_tracking.portfolios
+                    WHERE id = :id
+                """),
+                {"id": portfolio_id},
+            ).mappings().first()
+
+            if row is None:
+                return None
+
+            has_positions = conn.execute(
+                text("SELECT 1 FROM position_tracking.positions WHERE portfolio_id = :id LIMIT 1"),
+                {"id": portfolio_id},
+            ).first()
+            if has_positions:
+                raise PortfolioInUseError("portfolio has positions")
+
+            conn.execute(
+                text("DELETE FROM position_tracking.portfolios WHERE id = :id"),
+                {"id": portfolio_id},
+            )
+
+            return _row_to_portfolio(row)
+    finally:
+        engine.dispose()
+
+
 def _row_to_portfolio(row: Any) -> dict[str, Any]:
     meta = row["metadata"]
     if isinstance(meta, str):
