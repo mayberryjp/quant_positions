@@ -92,6 +92,13 @@ def _status_payload(status: Union[ReadinessStatus, Dict[str, Any]]) -> Dict[str,
     return {"status": "ok", **status}
 
 
+def _apply_cors_headers() -> None:
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Max-Age"] = "600"
+
+
 def _not_found(error: str = "not found") -> dict:
     response.status = 404
     return {"status": "not_found", "error": error}
@@ -142,6 +149,14 @@ def create_app(
             "request_start method=%s path=%s query=%s",
             request.method, request.path, request.query_string,
         )
+
+    @api.hook("after_request")
+    def _cors_after() -> None:
+        _apply_cors_headers()
+
+    @api.route("/<:re:.*>", method="OPTIONS")
+    def _cors_preflight() -> str:
+        return ""
 
     @api.hook("after_request")
     def _log_after() -> None:
