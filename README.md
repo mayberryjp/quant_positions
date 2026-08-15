@@ -13,7 +13,6 @@ Requirements:
 Bootstrap:
 
 ```bash
-cp .env.example .env
 python3.12 -m venv .venv
 source .venv/bin/activate    # or .venv\Scripts\Activate.ps1 on Windows
 python3 -m pip install --upgrade pip
