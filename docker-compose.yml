@@ -7,6 +7,6 @@ services:
     environment:
       - DATABASE_URL=postgresql+psycopg://quant:quant_dev_password@postgres:5432/quant
       - API_PORT=8015
-      - RECONCILIATION_INTERVAL=300
+      - RECONCILIATION_INTERVAL=43200
     ports:
       - "8015:8015"

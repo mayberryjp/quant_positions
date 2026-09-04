@@ -272,7 +272,7 @@ importers to evolve in separate codebases.
 
 ## Database Schema
 
-Schema: `position_tracking`
+Schema: `positions`
 
 | Table | Purpose |
 |-------|---------|

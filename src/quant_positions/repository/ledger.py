@@ -73,7 +73,7 @@ def import_ledger_entry(params: LedgerImportParams) -> dict[str, Any]:
             # Resolve portfolio
             portfolio_row = conn.execute(
                 text("""
-                    SELECT id FROM position_tracking.portfolios
+                    SELECT id FROM positions.portfolios
                     WHERE name = :name
                 """),
                 {"name": params.portfolio},
@@ -88,7 +88,7 @@ def import_ledger_entry(params: LedgerImportParams) -> dict[str, Any]:
                 text("""
                     SELECT id, portfolio_id, submitted_ticker, symbol_id,
                            position_id, quantity_delta
-                    FROM position_tracking.position_ledger_entries
+                    FROM positions.position_ledger_entries
                     WHERE idempotency_key = :key
                 """),
                 {"key": params.idempotency_key},
@@ -109,7 +109,7 @@ def import_ledger_entry(params: LedgerImportParams) -> dict[str, Any]:
             position_row = conn.execute(
                 text("""
                     SELECT id, quantity, average_cost, realized_pnl
-                    FROM position_tracking.positions
+                    FROM positions.positions
                     WHERE portfolio_id = :portfolio_id
                       AND lower(submitted_ticker) = :ticker
                       AND market = :market
@@ -127,7 +127,7 @@ def import_ledger_entry(params: LedgerImportParams) -> dict[str, Any]:
             if position_row is None:
                 position_row = conn.execute(
                     text("""
-                        INSERT INTO position_tracking.positions
+                        INSERT INTO positions.positions
                             (portfolio_id, symbol_id, submitted_ticker, market, locale,
                              quantity, average_cost, status)
                         VALUES (:portfolio_id, :symbol_id, :ticker, :market, :locale,
@@ -162,7 +162,7 @@ def import_ledger_entry(params: LedgerImportParams) -> dict[str, Any]:
             # Update position
             conn.execute(
                 text("""
-                    UPDATE position_tracking.positions
+                    UPDATE positions.positions
                     SET quantity = :quantity,
                         average_cost = :average_cost,
                         realized_pnl = :realized_pnl,
@@ -182,7 +182,7 @@ def import_ledger_entry(params: LedgerImportParams) -> dict[str, Any]:
             # Insert ledger entry
             ledger_row = conn.execute(
                 text("""
-                    INSERT INTO position_tracking.position_ledger_entries
+                    INSERT INTO positions.position_ledger_entries
                         (portfolio_id, position_id, symbol_id, submitted_ticker,
                          market, locale, idempotency_key, source, source_event_id,
                          event_type, quantity_delta, price, fees, occurred_at,
@@ -249,8 +249,8 @@ def list_ledger_entries(params: LedgerListParams) -> dict[str, Any]:
                            le.occurred_at, le.reason, le.tags, le.metadata,
                            le.created_at,
                            pf.name AS portfolio_name
-                    FROM position_tracking.position_ledger_entries le
-                    JOIN position_tracking.portfolios pf ON pf.id = le.portfolio_id
+                    FROM positions.position_ledger_entries le
+                    JOIN positions.portfolios pf ON pf.id = le.portfolio_id
                     {where}
                     ORDER BY le.occurred_at DESC, le.id DESC
                     LIMIT :limit OFFSET :offset
@@ -281,8 +281,8 @@ def get_ledger_entry_by_id(ledger_entry_id: int) -> dict[str, Any] | None:
                            le.occurred_at, le.reason, le.tags, le.metadata,
                            le.created_at,
                            pf.name AS portfolio_name
-                    FROM position_tracking.position_ledger_entries le
-                    JOIN position_tracking.portfolios pf ON pf.id = le.portfolio_id
+                    FROM positions.position_ledger_entries le
+                    JOIN positions.portfolios pf ON pf.id = le.portfolio_id
                     WHERE le.id = :id
                     LIMIT 1
                 """),

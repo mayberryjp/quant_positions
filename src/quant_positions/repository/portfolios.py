@@ -42,7 +42,7 @@ def list_portfolios(params: PortfolioListParams) -> dict[str, Any]:
                 text(f"""
                     SELECT id, name, portfolio_type, currency, enabled,
                            metadata, created_at, updated_at
-                    FROM position_tracking.portfolios
+                    FROM positions.portfolios
                     {where}
                     ORDER BY name ASC, id ASC
                     LIMIT :limit OFFSET :offset
@@ -66,7 +66,7 @@ def create_portfolio(params: CreatePortfolioParams) -> dict[str, Any]:
         with engine.begin() as conn:
             row = conn.execute(
                 text("""
-                    INSERT INTO position_tracking.portfolios (name, portfolio_type, currency, enabled, metadata)
+                    INSERT INTO positions.portfolios (name, portfolio_type, currency, enabled, metadata)
                     VALUES (:name, :portfolio_type, :currency, :enabled, :metadata)
                     RETURNING id, name, portfolio_type, currency, enabled, metadata, created_at, updated_at
                 """),
@@ -96,7 +96,7 @@ def get_portfolio_by_name(name: str) -> dict[str, Any] | None:
                 text("""
                     SELECT id, name, portfolio_type, currency, enabled,
                            metadata, created_at, updated_at
-                    FROM position_tracking.portfolios
+                    FROM positions.portfolios
                     WHERE name = :name
                     LIMIT 1
                 """),
@@ -126,7 +126,7 @@ def delete_portfolio(portfolio_id: int) -> dict[str, Any] | None:
                 text("""
                     SELECT id, name, portfolio_type, currency, enabled,
                            metadata, created_at, updated_at
-                    FROM position_tracking.portfolios
+                    FROM positions.portfolios
                     WHERE id = :id
                 """),
                 {"id": portfolio_id},
@@ -136,14 +136,14 @@ def delete_portfolio(portfolio_id: int) -> dict[str, Any] | None:
                 return None
 
             has_positions = conn.execute(
-                text("SELECT 1 FROM position_tracking.positions WHERE portfolio_id = :id LIMIT 1"),
+                text("SELECT 1 FROM positions.positions WHERE portfolio_id = :id LIMIT 1"),
                 {"id": portfolio_id},
             ).first()
             if has_positions:
                 raise PortfolioInUseError("portfolio has positions")
 
             conn.execute(
-                text("DELETE FROM position_tracking.portfolios WHERE id = :id"),
+                text("DELETE FROM positions.portfolios WHERE id = :id"),
                 {"id": portfolio_id},
             )
 

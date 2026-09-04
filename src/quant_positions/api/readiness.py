@@ -7,7 +7,7 @@ from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 
-EXPECTED_SCHEMA_VERSION = "0001_position_tracking"
+EXPECTED_SCHEMA_VERSION = "0002_positions_schema"
 EXPECTED_TABLES = frozenset((
     "portfolios",
     "positions",
@@ -86,7 +86,7 @@ def check_database_readiness(database_url: str | None = None) -> ReadinessStatus
             connection.execute(text("SELECT 1")).scalar_one()
 
             schema_version = connection.execute(
-                text("SELECT version_num FROM alembic_version")
+                text("SELECT version_num FROM positions.quant_positions_alembic_version")
             ).scalar_one()
 
             tables = tuple(
@@ -94,7 +94,7 @@ def check_database_readiness(database_url: str | None = None) -> ReadinessStatus
                     text("""
                         SELECT table_name
                         FROM information_schema.tables
-                        WHERE table_schema = 'position_tracking'
+                        WHERE table_schema = 'positions'
                           AND table_type = 'BASE TABLE'
                         ORDER BY table_name
                     """)
@@ -102,23 +102,23 @@ def check_database_readiness(database_url: str | None = None) -> ReadinessStatus
             )
 
             open_positions = connection.execute(
-                text("SELECT count(*) FROM position_tracking.positions WHERE status = 'open'")
+                text("SELECT count(*) FROM positions.positions WHERE status = 'open'")
             ).scalar_one()
 
             recent_ledger = connection.execute(
                 text("""
-                    SELECT count(*) FROM position_tracking.position_ledger_entries
+                    SELECT count(*) FROM positions.position_ledger_entries
                     WHERE created_at >= now() - interval '24 hours'
                 """)
             ).scalar_one()
 
             recon_warnings = connection.execute(
-                text("SELECT count(*) FROM position_tracking.reconciliation_warnings")
+                text("SELECT count(*) FROM positions.reconciliation_warnings")
             ).scalar_one()
 
             stale_workers = connection.execute(
                 text("""
-                    SELECT count(*) FROM position_tracking.worker_heartbeats
+                    SELECT count(*) FROM positions.worker_heartbeats
                     WHERE last_heartbeat < now() - interval '10 minutes'
                 """)
             ).scalar_one()

@@ -107,7 +107,7 @@ def test_worker_heartbeat_defaults():
 
 def test_migration_revision_constant():
     from quant_positions.api.readiness import EXPECTED_SCHEMA_VERSION, EXPECTED_TABLES
-    assert EXPECTED_SCHEMA_VERSION == "0001_position_tracking"
+    assert EXPECTED_SCHEMA_VERSION == "0002_positions_schema"
     assert len(EXPECTED_TABLES) == 8
     assert "portfolios" in EXPECTED_TABLES
     assert "positions" in EXPECTED_TABLES

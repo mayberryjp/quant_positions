@@ -41,7 +41,7 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
             # Record heartbeat
             conn.execute(
                 text("""
-                    INSERT INTO position_tracking.worker_heartbeats (worker_name, last_heartbeat, status)
+                    INSERT INTO positions.worker_heartbeats (worker_name, last_heartbeat, status)
                     VALUES (:name, now(), 'alive')
                     ON CONFLICT (worker_name) DO UPDATE
                     SET last_heartbeat = now(), status = 'alive'
@@ -52,7 +52,7 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
             # Create reconciliation run
             run_row = conn.execute(
                 text("""
-                    INSERT INTO position_tracking.reconciliation_runs (status, started_at)
+                    INSERT INTO positions.reconciliation_runs (status, started_at)
                     VALUES ('running', now())
                     RETURNING id
                 """)
@@ -65,8 +65,8 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
                     SELECT p.id, p.portfolio_id, p.symbol_id, p.submitted_ticker,
                            p.market, p.locale, p.quantity, p.average_cost,
                            pf.name AS portfolio_name
-                    FROM position_tracking.positions p
-                    JOIN position_tracking.portfolios pf ON pf.id = p.portfolio_id
+                    FROM positions.positions p
+                    JOIN positions.portfolios pf ON pf.id = p.portfolio_id
                     ORDER BY p.id
                 """)
             ).mappings().all()
@@ -81,7 +81,7 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
                 ledger_sum = conn.execute(
                     text("""
                         SELECT COALESCE(SUM(quantity_delta), 0) AS total_delta
-                        FROM position_tracking.position_ledger_entries
+                        FROM positions.position_ledger_entries
                         WHERE position_id = :position_id
                     """),
                     {"position_id": position_id},
@@ -92,7 +92,7 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
                     warnings_found += 1
                     conn.execute(
                         text("""
-                            INSERT INTO position_tracking.reconciliation_warnings
+                            INSERT INTO positions.reconciliation_warnings
                                 (run_id, portfolio_id, position_id, symbol_id,
                                  submitted_ticker, warning_type,
                                  expected_quantity, actual_quantity, detail)
@@ -125,9 +125,9 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
                            le.symbol_id,
                            COALESCE(SUM(le.quantity_delta), 0) AS total_delta,
                            pf.name AS portfolio_name
-                    FROM position_tracking.position_ledger_entries le
-                    JOIN position_tracking.portfolios pf ON pf.id = le.portfolio_id
-                    LEFT JOIN position_tracking.positions p ON p.id = le.position_id
+                    FROM positions.position_ledger_entries le
+                    JOIN positions.portfolios pf ON pf.id = le.portfolio_id
+                    LEFT JOIN positions.positions p ON p.id = le.position_id
                     WHERE p.id IS NULL AND le.position_id IS NOT NULL
                     GROUP BY le.position_id, le.portfolio_id, le.submitted_ticker,
                              le.symbol_id, pf.name
@@ -138,7 +138,7 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
                 warnings_found += 1
                 conn.execute(
                     text("""
-                        INSERT INTO position_tracking.reconciliation_warnings
+                        INSERT INTO positions.reconciliation_warnings
                             (run_id, portfolio_id, position_id, symbol_id,
                              submitted_ticker, warning_type,
                              expected_quantity, actual_quantity, detail)
@@ -166,7 +166,7 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
             # Complete the run
             conn.execute(
                 text("""
-                    UPDATE position_tracking.reconciliation_runs
+                    UPDATE positions.reconciliation_runs
                     SET status = 'completed',
                         positions_checked = :checked,
                         warnings_found = :warnings,
@@ -182,7 +182,7 @@ def run_reconciliation(database_url: str | None = None) -> dict[str, Any]:
             with engine.begin() as conn:
                 conn.execute(
                     text("""
-                        UPDATE position_tracking.reconciliation_runs
+                        UPDATE positions.reconciliation_runs
                         SET status = 'failed', error_message = :error, completed_at = now()
                         WHERE id = :id
                     """),

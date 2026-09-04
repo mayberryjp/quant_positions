@@ -51,19 +51,19 @@ def _make_fake_conn(positions=None, ledger_sums=None, orphans=None):
 
         if "worker_heartbeats" in stmt_str:
             return FakeResult()
-        elif "INSERT INTO position_tracking.reconciliation_runs" in stmt_str:
+        elif "INSERT INTO positions.reconciliation_runs" in stmt_str:
             return FakeResult(data=[{"id": 1}])
-        elif "FROM position_tracking.positions p" in stmt_str and "JOIN" in stmt_str:
+        elif "FROM positions.positions p" in stmt_str and "JOIN" in stmt_str:
             return FakeResult(data=positions or [])
         elif "SUM(quantity_delta)" in stmt_str and "WHERE position_id" in stmt_str:
             pos_id = params.get("position_id") if params else None
             scalar = ledger_sums.get(pos_id, Decimal("0")) if ledger_sums else Decimal("0")
             return FakeResult(scalar=scalar)
-        elif "LEFT JOIN position_tracking.positions p ON p.id" in stmt_str:
+        elif "LEFT JOIN positions.positions p ON p.id" in stmt_str:
             return FakeResult(data=orphans or [])
-        elif "INSERT INTO position_tracking.reconciliation_warnings" in stmt_str:
+        elif "INSERT INTO positions.reconciliation_warnings" in stmt_str:
             return FakeResult()
-        elif "UPDATE position_tracking.reconciliation_runs" in stmt_str:
+        elif "UPDATE positions.reconciliation_runs" in stmt_str:
             return FakeResult()
         else:
             return FakeResult()
@@ -118,7 +118,7 @@ def test_reconciliation_quantity_mismatch():
 
     def tracking_execute(stmt, params=None):
         stmt_str = str(stmt) if hasattr(stmt, 'text') else str(stmt)
-        if "INSERT INTO position_tracking.reconciliation_warnings" in stmt_str:
+        if "INSERT INTO positions.reconciliation_warnings" in stmt_str:
             warnings_inserted.append(params)
         return orig_execute(stmt, params)
 
@@ -156,7 +156,7 @@ def test_reconciliation_missing_current_position():
 
     def tracking_execute(stmt, params=None):
         stmt_str = str(stmt) if hasattr(stmt, 'text') else str(stmt)
-        if "INSERT INTO position_tracking.reconciliation_warnings" in stmt_str:
+        if "INSERT INTO positions.reconciliation_warnings" in stmt_str:
             warnings_inserted.append(params)
         return orig_execute(stmt, params)
 

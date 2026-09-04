@@ -40,7 +40,7 @@ def list_reconciliation_runs(params: ReconciliationRunListParams) -> dict[str, A
                 text(f"""
                     SELECT id, status, positions_checked, warnings_found,
                            started_at, completed_at, error_message, created_at
-                    FROM position_tracking.reconciliation_runs
+                    FROM positions.reconciliation_runs
                     {where}
                     ORDER BY started_at DESC, id DESC
                     LIMIT :limit OFFSET :offset
@@ -79,8 +79,8 @@ def list_reconciliation_warnings(params: ReconciliationWarningListParams) -> dic
                            w.expected_quantity, w.actual_quantity, w.detail,
                            w.created_at,
                            pf.name AS portfolio_name
-                    FROM position_tracking.reconciliation_warnings w
-                    JOIN position_tracking.portfolios pf ON pf.id = w.portfolio_id
+                    FROM positions.reconciliation_warnings w
+                    JOIN positions.portfolios pf ON pf.id = w.portfolio_id
                     {where}
                     ORDER BY w.created_at DESC, w.id DESC
                     LIMIT :limit OFFSET :offset

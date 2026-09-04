@@ -39,8 +39,8 @@ def list_lots(params: LotListParams) -> dict[str, Any]:
                            l.cost_basis, l.acquired_at, l.closed_at,
                            l.status, l.metadata, l.created_at, l.updated_at,
                            pf.name AS portfolio_name
-                    FROM position_tracking.position_lots l
-                    JOIN position_tracking.portfolios pf ON pf.id = l.portfolio_id
+                    FROM positions.position_lots l
+                    JOIN positions.portfolios pf ON pf.id = l.portfolio_id
                     {where}
                     ORDER BY l.acquired_at ASC NULLS LAST, l.id ASC
                     LIMIT :limit OFFSET :offset

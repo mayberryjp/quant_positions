@@ -48,8 +48,8 @@ def list_positions(params: PositionListParams) -> dict[str, Any]:
                            p.market_value, p.realized_pnl, p.unrealized_pnl,
                            p.status, p.metadata, p.created_at, p.updated_at,
                            pf.name AS portfolio_name
-                    FROM position_tracking.positions p
-                    JOIN position_tracking.portfolios pf ON pf.id = p.portfolio_id
+                    FROM positions.positions p
+                    JOIN positions.portfolios pf ON pf.id = p.portfolio_id
                     {where}
                     ORDER BY p.submitted_ticker ASC, p.id ASC
                     LIMIT :limit OFFSET :offset
@@ -78,8 +78,8 @@ def get_position_by_id(position_id: int) -> dict[str, Any] | None:
                            p.market_value, p.realized_pnl, p.unrealized_pnl,
                            p.status, p.metadata, p.created_at, p.updated_at,
                            pf.name AS portfolio_name
-                    FROM position_tracking.positions p
-                    JOIN position_tracking.portfolios pf ON pf.id = p.portfolio_id
+                    FROM positions.positions p
+                    JOIN positions.portfolios pf ON pf.id = p.portfolio_id
                     WHERE p.id = :position_id
                     LIMIT 1
                 """),
@@ -108,8 +108,8 @@ def get_position_by_ticker(params: PositionTickerLookupParams) -> dict[str, Any]
                            p.market_value, p.realized_pnl, p.unrealized_pnl,
                            p.status, p.metadata, p.created_at, p.updated_at,
                            pf.name AS portfolio_name
-                    FROM position_tracking.positions p
-                    JOIN position_tracking.portfolios pf ON pf.id = p.portfolio_id
+                    FROM positions.positions p
+                    JOIN positions.portfolios pf ON pf.id = p.portfolio_id
                     WHERE pf.name = :portfolio
                       AND lower(p.submitted_ticker) = :ticker
                       AND p.market = :market
